@@ -11,7 +11,7 @@ const e = require("express");
 app.use(cors());
 app.use(express.json());
 
-const uri = `mongodb://127.0.0.1:27017/`;
+const uri = `mongodb+srv://assignment-5-admin:5NWy0YcAVh4Dgmm4@cluster0.5nmcj.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
