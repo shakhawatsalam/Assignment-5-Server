@@ -5,8 +5,6 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 const cors = require("cors");
-const { default: pick } = require("./constant");
-const e = require("express");
 
 app.use(cors());
 app.use(express.json());
@@ -24,6 +22,41 @@ const run = async () => {
     const bookCollection = db.collection("books");
     const userCollection = db.collection("users");
     // * Get All Books
+
+    app.get("/book/:id", async (req, res) => {
+      const id = req.params.id;
+      const book = await bookCollection.findOne({ _id: ObjectId(id) });
+      res.send({ status: true, data: book });
+    });
+
+    app.post("/book/:id", async (req, res) => {
+      const bookId = req.params.id;
+      const updatedbook = req.body;
+
+      try {
+        const result = await bookCollection.updateOne(
+          { _id: ObjectId(bookId) },
+          { $set: updatedbook }
+        );
+
+        if (result.modifiedCount === 1) {
+          res.sendStatus(200);
+        } else {
+          res.sendStatus(404);
+        }
+      } catch (error) {
+        console.error(error);
+        res.sendStatus(500);
+      }
+    });
+
+    app.delete("/book/:id", async (req, res) => {
+      const id = req.params.id;
+
+      const result = await bookCollection.deleteOne({ _id: ObjectId(id) });
+      res.send(result);
+    });
+
     app.get("/books", async (req, res) => {
       const bookFilterableFields = [
         "searchTerm",
@@ -71,45 +104,11 @@ const run = async () => {
 
       res.send({ status: true, data: book });
     });
-
-    app.get("/book/:id", async (req, res) => {
-      const id = req.params.id;
-      const book = await bookCollection.findOne({ _id: ObjectId(id) });
-      res.send({ status: true, data: book });
-    });
-
     app.post("/book", async (req, res) => {
       const book = req.body;
 
       const result = await bookCollection.insertOne(book);
 
-      res.send(result);
-    });
-    app.post("/book/:id", async (req, res) => {
-      const bookId = req.params.id;
-      const updatedbook = req.body;
-
-      try {
-        const result = await bookCollection.updateOne(
-          { _id: ObjectId(bookId) },
-          { $set: updatedbook }
-        );
-
-        if (result.modifiedCount === 1) {
-          res.sendStatus(200);
-        } else {
-          res.sendStatus(404);
-        }
-      } catch (error) {
-        console.error(error);
-        res.sendStatus(500);
-      }
-    });
-
-    app.delete("/book/:id", async (req, res) => {
-      const id = req.params.id;
-
-      const result = await bookCollection.deleteOne({ _id: ObjectId(id) });
       res.send(result);
     });
 
@@ -152,15 +151,6 @@ const run = async () => {
         res.status(404).json({ error: "Product not found" });
       }
     });
-
-    app.post("/users", async (req, res) => {
-      const user = req.body;
-      const { email } = user;
-      const result = await userCollection.insertOne(user);
-
-      res.send(result);
-    });
-
     // * Wish List
     app.post("/wishlist/:email", async (req, res) => {
       const email = req.params.email;
@@ -215,6 +205,14 @@ const run = async () => {
       const user = await cursor.toArray();
 
       res.send({ status: true, data: user });
+    });
+
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      const { email } = user;
+      const result = await userCollection.insertOne(user);
+
+      res.send(result);
     });
   } finally {
   }
