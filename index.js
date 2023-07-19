@@ -9,7 +9,7 @@ const cors = require("cors");
 app.use(cors());
 app.use(express.json());
 
-const uri = `mongodb+srv://assignment-5-admin:5NWy0YcAVh4Dgmm4@cluster0.5nmcj.mongodb.net/?retryWrites=true&w=majority`;
+const uri = process.env.DATABASE_URL;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -210,9 +210,23 @@ const run = async () => {
     app.post("/users", async (req, res) => {
       const user = req.body;
       const { email } = user;
-      const result = await userCollection.insertOne(user);
+      try {
+        const isExist = await userCollection.find({ email }).toArray();
 
-      res.send(result);
+        if (isExist.length > 0) {
+          return res
+            .status(409)
+            .json({ error: "User with this email already exists" });
+        }
+
+        const result = await userCollection.insertOne(user);
+        res.json(result);
+      } catch (error) {
+        console.error("Error creating user:", error);
+        res
+          .status(500)
+          .json({ error: "An error occurred while creating the user" });
+      }
     });
   } finally {
   }
